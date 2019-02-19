@@ -117,13 +117,30 @@ int main()
 			int nCeiling = (float)(nScreenHeight / 2.0) - nScreenHeight / ((float)fDistanceToWall);
 			int nFloor = nScreenHeight - nCeiling;
 
+			short nShade = ' ';
+			short nShadeFloor = ' ';
+
+			if (fDistanceToWall <= fDepth / 4.0f)     nShade = 0x2588; // Very close
+			else if (fDistanceToWall < fDepth / 3.0f) nShade = 0x2593;
+			else if (fDistanceToWall < fDepth / 2.0f) nShade = 0x2592;
+			else if (fDistanceToWall < fDepth)        nShade = 0x2591;
+			else                                      nShade = ' ';    // Too far away
+
 			for (int y = 0; y < nScreenHeight; y++) {
 				if (y < nCeiling)
 					screen[y*nScreenWidth + x] = ' ';
 				else if (y > nCeiling && y <= nFloor)
-					screen[y*nScreenWidth + x] = '*';
-				else
-					screen[y*nScreenWidth + x] = ' ';
+					screen[y*nScreenWidth + x] = nShade;
+				else {
+					// Shade floor based on distance
+					float b = 1.0f - (((float)y - nScreenHeight / 2.0f) / ((float)nScreenHeight / 2.0f));
+					if (b < 0.25)      nShadeFloor = '#';
+					else if (b < 0.5)  nShadeFloor = 'x';
+					else if (b < 0.75) nShadeFloor = '.';
+					else if (b < 0.9)  nShadeFloor = '-';
+					else               nShadeFloor = ' ';
+					screen[y*nScreenWidth + x] = nShadeFloor;
+				}
 			}
 
 		}
