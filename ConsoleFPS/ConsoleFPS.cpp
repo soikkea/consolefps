@@ -4,6 +4,8 @@
 #include "pch.h"
 #include <iostream>
 #include <chrono>
+#include <vector>
+#include <algorithm>
 
 #include <Windows.h>
 
@@ -98,6 +100,7 @@ int main()
 
 			float fDistanceToWall = 0;
 			bool bHitWall = false;
+			bool bBoundary = false;
 
 			// Unit vector for ray in player space
 			float fEyeX = sinf(fRayAngle);
@@ -121,6 +124,26 @@ int main()
 					// Ray is in bounds so test to see if the ray cell is a wall block
 					if (map[nTestY * nMapWidth + nTestX] == '#') {
 						bHitWall = true;
+
+						std::vector<std::pair<float, float>> p; // distance, dot product
+						for (int tx = 0; tx < 2; tx++) {
+							for (int ty = 0; ty < 2; ty++)
+							{
+								float vy = (float)nTestY + ty - fPlayerY;
+								float vx = (float)nTestX + tx - fPlayerX;
+								float d = sqrt(vx*vx + vy * vy);
+								float dot = (fEyeX * vx / d) + (fEyeY * vy / d);
+								p.push_back(std::make_pair(d, dot));
+							}
+						}
+
+						// Sort Pairs from closets to farthest
+						std::sort(p.begin(), p.end(), [](const std::pair<float, float> &left, const std::pair<float, float> &right) {return left.first < right.first; });
+
+						float fBound = 0.01;
+						if (acos(p.at(0).second) < fBound) bBoundary = true;
+						if (acos(p.at(1).second) < fBound) bBoundary = true;
+						if (acos(p.at(2).second) < fBound) bBoundary = true;
 					}
 				}
 			}
@@ -137,6 +160,8 @@ int main()
 			else if (fDistanceToWall < fDepth / 2.0f) nShade = 0x2592;
 			else if (fDistanceToWall < fDepth)        nShade = 0x2591;
 			else                                      nShade = ' ';    // Too far away
+
+			if (bBoundary) nShade = ' ';
 
 			for (int y = 0; y < nScreenHeight; y++) {
 				if (y < nCeiling)
