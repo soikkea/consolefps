@@ -3,6 +3,7 @@
 
 #include "pch.h"
 #include <iostream>
+#include <chrono>
 
 #include <Windows.h>
 
@@ -46,9 +47,39 @@ int main()
 	map += L"#..............#";
 	map += L"################";
 
+
+	// Time points
+	auto tp1 = std::chrono::system_clock::now();
+	auto tp2 = std::chrono::system_clock::now();
+	
+
 	// Game loop
 	while (true)
 	{
+		tp2 = std::chrono::system_clock::now();
+		std::chrono::duration<float> elapsedTime = tp2 - tp1;
+		tp1 = tp2;
+		float fElapsedTime = elapsedTime.count();
+
+
+		// Controls
+		// Handle CCW Rotation
+		if (GetAsyncKeyState((unsigned short)'A') & 0x8000)
+			fPlayerA -= (0.8f) * fElapsedTime;
+		
+		if (GetAsyncKeyState((unsigned short)'D') & 0x8000)
+			fPlayerA += (0.8f) * fElapsedTime;
+
+		if (GetAsyncKeyState((unsigned short)'W') & 0x8000) {
+			fPlayerX += sinf(fPlayerA) * 5.0f * fElapsedTime;
+			fPlayerY += cosf(fPlayerA) * 5.0f * fElapsedTime;
+		}
+
+		if (GetAsyncKeyState((unsigned short)'S') & 0x8000) {
+			fPlayerX -= sinf(fPlayerA) * 5.0f * fElapsedTime;
+			fPlayerY -= cosf(fPlayerA) * 5.0f * fElapsedTime;
+		}
+
 		for (int x = 0; x < nScreenWidth; x++) {
 			// For each column, calculate the projected ray angle into world space
 			float fRayAngle = (fPlayerA - fFOV / 2.0f) + ((float)x / (float)nScreenWidth) * fFOV;
